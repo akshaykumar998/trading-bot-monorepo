@@ -76,6 +76,10 @@ const WorkFlowSchema = new Schema({
 })
 
 const CredentialsTypeSchema = new Schema({
+    key: {
+        type: String,
+        required: true
+    },
     title: {
         type: String,
         required: true
@@ -84,9 +88,35 @@ const CredentialsTypeSchema = new Schema({
         type: Boolean,
         required: true
     }
-})
+}, { _id: false })
+
+const MetadataNodeFieldSchema = new Schema({
+    fieldKey: {
+        type: String,
+        required: true
+    },
+    title: {
+        type: String,
+        required: true
+    },
+    type: {
+        type: String,
+        enum: ["select", "number", "asset", "text"],
+        required: true
+    },
+    required: {
+        type: Boolean,
+        default: true
+    },
+    options: [String]
+}, { _id: false })
 
 const NodesSchema = new Schema({
+    slug: {
+        type: String,
+        required: true,
+        unique: true
+    },
     title: {
         type: String,
         required: true
@@ -100,7 +130,8 @@ const NodesSchema = new Schema({
         enum: ["ACTION", "TRIGGER"],
         required: true
     },
-    credentialsType: [CredentialsTypeSchema]
+    credentialsType: [CredentialsTypeSchema],
+    metadataNodeSchema: [MetadataNodeFieldSchema]
 })
 
 const ExecutionsSchema = new Schema({

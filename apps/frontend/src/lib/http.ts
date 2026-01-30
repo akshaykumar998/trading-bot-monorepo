@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { type AxiosError } from 'axios'
 
 /* -----------------------------
    Axios Instance
@@ -24,7 +24,7 @@ http.interceptors.request.use(
 
     return config
   },
-  (error) => Promise.reject(error)
+  (error: AxiosError) => Promise.reject(error)
 )
 
 /* -----------------------------
@@ -32,7 +32,7 @@ http.interceptors.request.use(
 ------------------------------*/
 http.interceptors.response.use(
   (response) => response,
-  (error) => {
+  (error: AxiosError) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
     }

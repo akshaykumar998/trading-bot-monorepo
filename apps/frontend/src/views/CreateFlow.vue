@@ -1,12 +1,26 @@
 <template>
-  <div class="h-screen bg-background flex items-center justify-center p-6">
+  <div class="h-screen bg-background flex flex-col p-6">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold">Create Workflow</h1>
+        <p class="text-sm text-muted-foreground">Design your trading workflow</p>
+      </div>
+      <div class="flex gap-2">
+        <Button variant="outline" @click="handleSave" :disabled="saving">
+          {{ saving ? 'Saving...' : 'Save Draft' }}
+        </Button>
+        <Button @click="handlePublish" :disabled="publishing || nodes.length === 0">
+          {{ publishing ? 'Publishing...' : 'Publish' }}
+        </Button>
+      </div>
+    </div>
     <TriggerSheet @trigger-selected="handleTriggerSelected"></TriggerSheet>
     <ActionSheet
       v-model:sheet-model="openActionSheet"
       @action-selected="handleActionSelected"
     ></ActionSheet>
     <div
-      class="w-full max-w-6xl h-[calc(100vh-4rem)] bg-card border border-sidebar-border rounded-lg shadow-md overflow-hidden"
+      class="flex-1 w-full max-w-6xl mx-auto bg-card border border-sidebar-border rounded-lg shadow-md overflow-hidden"
     >
       <VueFlow
         v-model:nodes="nodes"
@@ -41,7 +55,10 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { VueFlow, useVueFlow, type Node, type Edge } from '@vue-flow/core'
+import { api } from '@/lib/http'
+import { Button } from '@/components/ui/button'
 import TriggerSheet from '@/components/TriggerSheet.vue'
 import PriceTrigger from '@/nodes/triggers/PriceTrigger.vue'
 import TimersNode from '@/nodes/triggers/TimersNode.vue'
@@ -66,13 +83,97 @@ const edges = ref<Edge[]>([])
 
 const openActionSheet = ref<boolean>(false)
 
+const router = useRouter()
 const { onConnect, onConnectStart, onConnectEnd, addEdges, addNodes, project } = useVueFlow()
+
+const saving = ref(false)
+const publishing = ref(false)
 
 let connectionSucceeded: boolean = false
 let sourceNodeId: string | undefined | null = null
 let position: Dimension = {
   x: 0,
   y: 0,
+}
+
+// Transform nodes to backend format
+const transformNodesForBackend = () => {
+  return nodes.value.map((node) => {
+    const nodeData = node.data
+    const nodeId = nodeData && 'nodeId' in nodeData ? (nodeData as { nodeId?: string }).nodeId ?? '' : ''
+
+    const isActionNode = node.type !== 'timer' && node.type !== 'price-trigger'
+    let credentials: Record<string, unknown> = {}
+    if (isActionNode && nodeData) {
+      const tradingData = nodeData as unknown as TradingMetaData
+      credentials = tradingData.credentials || {}
+    }
+
+    return {
+      id: node.id,
+      nodeId,
+      credentials,
+      position: node.position,
+      data: {
+        kind: node.type === 'timer' || node.type === 'price-trigger' ? 'TRIGGER' : 'ACTION',
+        metadata: node.data,
+      },
+    }
+  })
+}
+
+// Transform edges to backend format
+const transformEdgesForBackend = () => {
+  return edges.value.map((edge) => ({
+    id: edge.id || crypto.randomUUID(),
+    source: edge.source,
+    target: edge.target,
+  }))
+}
+
+const handleSave = async () => {
+  if (nodes.value.length === 0) {
+    alert('Please add at least one node to save')
+    return
+  }
+
+  try {
+    saving.value = true
+    const workflowData = {
+      nodes: transformNodesForBackend(),
+      edges: transformEdgesForBackend(),
+    }
+    await api.createWorkflow(workflowData)
+    alert('Workflow saved successfully!')
+  } catch (err: unknown) {
+    const error = err as { response?: { data?: { message?: string } } }
+    alert(error.response?.data?.message || 'Failed to save workflow')
+  } finally {
+    saving.value = false
+  }
+}
+
+const handlePublish = async () => {
+  if (nodes.value.length === 0) {
+    alert('Please add at least one node to publish')
+    return
+  }
+
+  try {
+    publishing.value = true
+    const workflowData = {
+      nodes: transformNodesForBackend(),
+      edges: transformEdgesForBackend(),
+    }
+    const response = await api.createWorkflow(workflowData)
+    const workflowId = response.data.id
+    router.push(`/workflow/${workflowId}`)
+  } catch (err: unknown) {
+    const error = err as { response?: { data?: { message?: string } } }
+    alert(error.response?.data?.message || 'Failed to publish workflow')
+  } finally {
+    publishing.value = false
+  }
 }
 
 onConnectStart(({ nodeId }) => {

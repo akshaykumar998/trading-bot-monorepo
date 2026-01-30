@@ -1,5 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
+import cors from "cors";
 import { CreateWorkflowSchema, SigninSchema, SignupSchema, UpdateWorkflowSchema } from "common/types";
 import jwt from "jsonwebtoken";
 
@@ -11,6 +12,9 @@ mongoose.connect(process.env.MONGO_URL!);
 const JWT_SECRET = process.env.JWT_SECRET!;
 const app = express();
 app.use(express.json())
+app.use(cors({
+    origin: process.env.WEB_URL || 'http://localhost:5173'
+  }));
 
 app.post("/signup", async (req, res) => {
     const {success, data} = SignupSchema.safeParse(req.body);
@@ -36,7 +40,7 @@ app.post("/signup", async (req, res) => {
     }
 });
 
-app.post("/signin", authMiddleware, async (req, res) => {
+app.post("/signin", async (req, res) => {
     const {success, data} = SigninSchema.safeParse(req.body);
 
     if(!success) {
@@ -130,19 +134,32 @@ app.put("/workflow/:workflowId", authMiddleware, async (req, res) => {
 });
 
 app.get("/workflows", authMiddleware, async (req, res) => {
-    WorkflowModel.find({userId: req.userId})
+    try {
+        const workflows = await WorkflowModel.find({userId: req.userId})
+        res.json(workflows)
+    } catch (error) {
+        res.status(500).json({
+            message: "Failed to fetch workflows"
+        })
+    }
 })
 
 app.get("/workflow/:workflowId", authMiddleware, async (req, res) => {
-    const workflow = await WorkflowModel.findById({workflowId: req.params.workflowId});
-    if(!workflow || workflow.userId.toString() !== req.userId) {
-        res.status(404).json({
-            message: "Workflow not found"
-        })
-        return
-    }
+    try {
+        const workflow = await WorkflowModel.findById(req.params.workflowId);
+        if(!workflow || workflow.userId.toString() !== req.userId) {
+            res.status(404).json({
+                message: "Workflow not found"
+            })
+            return
+        }
 
-    res.json(workflow)
+        res.json(workflow)
+    } catch (error) {
+        res.status(500).json({
+            message: "Failed to fetch workflow"
+        })
+    }
 });
 
 app.get("/workflow/executions/:workflowId", authMiddleware, async (req, res) => {
