@@ -114,6 +114,7 @@ const transformNodesForBackend = () => {
       nodeId,
       credentials,
       position: node.position,
+      type: node.type,
       data: {
         kind: node.type === 'timer' || node.type === 'price-trigger' ? 'TRIGGER' : 'ACTION',
         metadata: node.data,

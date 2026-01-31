@@ -95,6 +95,7 @@ app.post("/workflow", authMiddleware, async (req, res) => {
             id: workflow._id
         })
     } catch (error) {
+        console.log(error);
         res.status(411).json({
             message: "Failed to create workflow"
         })

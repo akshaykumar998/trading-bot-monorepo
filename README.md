@@ -1,33 +1,236 @@
-# `Turborepo` Vite starter
+# Trading Bot
 
-This is a community-maintained example. If you experience a problem, please submit a pull request with a fix. GitHub Issues will be closed.
+A modern, full-stack trading automation platform that allows users to create, manage, and execute automated trading workflows with visual node-based configuration.
 
-## Using this example
+## Overview
 
-Run the following command:
+Trading Bot is a sophisticated trading automation system built with a monorepo architecture using **Turbo**. It enables traders to design complex trading strategies through an intuitive visual interface and execute them automatically based on configurable triggers.
 
-```sh
-npx create-turbo@latest -e with-vite
+### Key Features
+
+- **Visual Workflow Builder**: Create trading strategies using a drag-and-drop node-based interface
+- **Multiple Triggers**: Support for price-based triggers, time-based triggers, and more
+- **Trading Actions**: Execute trades on multiple platforms (HyperLiquid, Lighter, and more)
+- **Execution History**: Track all workflow executions with detailed status and results
+- **User Authentication**: Secure user accounts with JWT-based authentication
+- **Real-time Monitoring**: Monitor active workflows and their execution status
+
+## Project Structure
+
+This is a **Monorepo** project managed with **Turbo** and **Bun**, containing:
+
+### Apps
+
+- **Frontend** (`apps/frontend/`) - Vue 3 + Vite + TypeScript
+  - Interactive UI for workflow creation and management
+  - Real-time dashboard for monitoring executions
+  - Authentication and user management interface
+
+- **Backend** (`apps/backend/`) - Express + MongoDB + TypeScript
+  - REST API for workflow management and execution
+  - User authentication and authorization
+  - Database models for users, workflows, nodes, edges, and executions
+
+- **Executor** (`apps/executor/`) - Node.js + TypeScript
+  - Background service that processes and executes workflows
+  - Monitors triggers (timers, price events, etc.)
+  - Handles transaction execution on trading platforms
+
+### Packages
+
+- **Common** (`packages/common/`) - Shared types and metadata
+  - Zod schemas for data validation
+  - Shared TypeScript types across all apps
+
+- **DB** (`packages/db/`) - Database client and models
+  - MongoDB models and connections
+  - Data access layer for all applications
+
+- **ESLint Config** (`packages/eslint-config/`) - Shared linting configuration
+
+- **TypeScript Config** (`packages/typescript-config/`) - Shared TypeScript configuration
+
+## Tech Stack
+
+- **Runtime**: [Bun](https://bun.com) (v1.3.6+)
+- **Package Manager**: Bun
+- **Build Tool**: Turbo (monorepo orchestration)
+- **Frontend**: Vue 3 + Vite + TypeScript
+- **Backend**: Express.js + MongoDB + Mongoose
+- **Database**: MongoDB
+- **Authentication**: JWT
+- **Styling**: Tailwind CSS (via UI components)
+- **Language**: TypeScript
+
+## Prerequisites
+
+- **Bun** v1.3.6 or higher - [Install Bun](https://bun.sh)
+- **MongoDB** running locally or remote connection string
+- **Node.js** (optional, but recommended for some tools)
+
+## Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd trading-bot
+   ```
+
+2. **Install dependencies**
+   ```bash
+   bun install
+   ```
+
+3. **Environment Setup**
+   Create `.env` files in the root and respective app directories with required variables:
+
+   **Root `.env`:**
+   ```
+   MONGO_URL=mongodb://localhost:27017/trading-bot
+   JWT_SECRET=your-secret-key
+   WEB_URL=http://localhost:5173
+   ```
+
+   **Backend `.env`:**
+   ```
+   MONGO_URL=mongodb://localhost:27017/trading-bot
+   JWT_SECRET=your-secret-key
+   WEB_URL=http://localhost:5173
+   ```
+
+   **Frontend `.env`:**
+   ```
+   VITE_API_URL=http://localhost:3000
+   ```
+
+## Development
+
+### Start all services in development mode
+
+```bash
+bun run dev
 ```
 
-## What's inside?
+This will start:
+- Frontend on `http://localhost:5173`
+- Backend on `http://localhost:3000`
+- Executor service in the background
 
-This Turborepo includes the following packages and apps:
+### Individual service commands
 
-### Apps and Packages
+**Frontend:**
+```bash
+cd apps/frontend
+bun dev
+```
 
-- `docs`: a vanilla [vite](https://vitejs.dev) ts app
-- `web`: another vanilla [vite](https://vitejs.dev) ts app
-- `@repo/ui`: a stub component & utility library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: shared `eslint` configurations
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+**Backend:**
+```bash
+cd apps/backend
+bun run index.ts
+```
 
-Each package and app is 100% [TypeScript](https://www.typescriptlang.org/).
+**Executor:**
+```bash
+cd apps/executor
+bun run index.ts
+```
 
-### Utilities
+## Building
 
-This Turborepo has some additional tools already setup for you:
+Build all apps and packages:
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+```bash
+bun run build
+```
+
+This generates optimized production builds in the `dist/` directories of each app.
+
+## Linting & Code Quality
+
+Run linting across the monorepo:
+
+```bash
+bun run lint
+```
+
+Format code with Prettier:
+
+```bash
+bun run format
+```
+
+## API Endpoints
+
+### Authentication
+- `POST /signup` - Create a new user account
+- `POST /signin` - Sign in to existing account
+
+### Workflows
+- `GET /workflows` - List user's workflows
+- `POST /workflows` - Create a new workflow
+- `GET /workflows/:id` - Get workflow details
+- `PUT /workflows/:id` - Update workflow
+- `DELETE /workflows/:id` - Delete workflow
+
+### Executions
+- `GET /executions` - List workflow executions
+- `GET /executions/:id` - Get execution details
+
+## Workflow Components
+
+### Triggers
+- **Timer** - Execute at fixed intervals
+- **Price Trigger** - Execute when price meets conditions
+
+### Actions
+- **HyperLiquid** - Execute trades on HyperLiquid DEX
+- **Lighter** - Execute trades on Lighter protocol (using Lighter SDK)
+- **Backpack** - Manage Backpack wallet interactions
+
+## Project Scripts
+
+| Script | Description |
+|--------|-------------|
+| `bun run dev` | Start all services in development mode |
+| `bun run build` | Build all apps and packages |
+| `bun run lint` | Run ESLint across the monorepo |
+| `bun run format` | Format code with Prettier |
+
+## SDK & Integration References
+
+For implementing live trading capabilities, you can reference the following external SDKs:
+
+- **Lighter SDK** - TypeScript SDK for Lighter protocol trading
+  - Reference: [hkirat/ai-trading-agent](https://github.com/hkirat/ai-trading-agent) (lighter-sdk-ts directory)
+  - Supports market orders, limit orders, and position management
+  - Live trading on Lighter DEX
+
+## Troubleshooting
+
+**MongoDB Connection Error**
+- Ensure MongoDB is running: `mongod`
+- Check `MONGO_URL` environment variable is correct
+
+**Port Already in Use**
+- Frontend default: 5173, Backend default: 3000
+- Modify `vite.config.ts` for frontend or port binding in backend
+
+**Bun Installation Issues**
+- Update Bun: `bun upgrade`
+- Clear cache: `rm -rf node_modules .bun`
+
+## Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Run `bun run lint` and `bun run format`
+4. Submit a pull request
+
+## License
+
+[Add your license here]
+
+## Support
+
+For issues and feature requests, please open an issue on the repository.

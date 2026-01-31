@@ -54,6 +54,10 @@ const WorkflowNodesSchema = new Schema({
         type: String,
         required: true
     },
+    type: {
+        type: String,
+        required: true
+    },
     credentials: Schema.Types.Mixed,
     position: PositionSchema,
     nodeId: {
