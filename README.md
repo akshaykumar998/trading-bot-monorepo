@@ -219,18 +219,3 @@ For implementing live trading capabilities, you can reference the following exte
 **Bun Installation Issues**
 - Update Bun: `bun upgrade`
 - Clear cache: `rm -rf node_modules .bun`
-
-## Contributing
-
-1. Create a feature branch
-2. Make your changes
-3. Run `bun run lint` and `bun run format`
-4. Submit a pull request
-
-## License
-
-[Add your license here]
-
-## Support
-
-For issues and feature requests, please open an issue on the repository.
